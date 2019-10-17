@@ -1,0 +1,4 @@
+#!/usr/bin/env python3
+from vsplunk.vsplunk import main_vsplunk
+
+main_vsplunk()
