@@ -1,2 +1,2 @@
-splunk-sdk
-git+https://github.com/saulpw/visidata@v2.-1
+splunk-sdk>=1.6.11
+visidata>=1.5.2

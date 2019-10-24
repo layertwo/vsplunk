@@ -103,7 +103,7 @@ def read_config(path):
     read ~/.vsplunk for splunk settings
     """
     config = configparser.ConfigParser()
-    config.read(path)
+    config.read(path.resolve())
 
     if 'SPLUNK' in config.sections():
         return config['SPLUNK']
@@ -114,8 +114,8 @@ def read_config(path):
                         'username': 'admin',
                         'password': 'changeme'}
 
-    if not os.path.exists(path):
-        with open(path, 'w') as fp:
+    if not path.exists():
+        with path.open_text(mode='w') as fp:
             config.write(fp)
         return read_config(path)
     vd.status('unable to read ~/.vsplunk', priority=3)
