@@ -8,7 +8,6 @@ TODO
 import re
 import argparse
 import configparser
-import os
 import datetime
 
 from visidata import *
@@ -19,7 +18,13 @@ __author__ = 'Lucas Messenger'
 
 
 class SplunkSheet(Sheet):
+    """
+    vsplunk main sheet
+    """
     def __init__(self, name, **kwargs):
+        """
+        Init SplunkSheet
+        """
         self.filetype = 'spl'
         self.rowtype = 'queries'
         self.rows = []
@@ -35,7 +40,13 @@ class SplunkSheet(Sheet):
 
 
 class SplunkSearchSheet(Sheet):
+    """
+    Sheet class for issued queries
+    """
     def __init__(self, query, **kwargs):
+        """
+        Init SplunkSearchSheet
+        """
         name = re.sub('[^a-zA-Z0-9]', '', query)
         self.rowtype = 'results'
         self.colnames = {}
@@ -46,6 +57,10 @@ class SplunkSearchSheet(Sheet):
         self.reload()
 
     def addRow(self, row, index=None):
+        """
+        Add data as new row
+        Create new columns if not in sheet
+        """
         super().addRow(row, index=index)
         if isinstance(row, dict):
             for k, v in row.items():
@@ -56,12 +71,11 @@ class SplunkSearchSheet(Sheet):
                         c = ColumnItem(k, type=deduceType(v))
                     self.colnames[k] = c
                     self.addColumn(c)
-            return row
 
     @asyncthread
     def reload(self):
         """
-        add rows from query results
+        Add rows from query results
         """
         self.colnames = {}
         self.columns = []
@@ -72,6 +86,9 @@ class SplunkSearchSheet(Sheet):
                 self.addRow(row)
 
     def search(self):
+        """
+        Search Splunk with query
+        """
         import splunklib.results
         search_settings = {'search_mode': 'normal',
                            'count': 0}
@@ -123,6 +140,9 @@ def read_config(path):
 
 
 def search_splunk():
+    """
+    Query prompt, query history, search sheet
+    """
     query = vd().input('splunk-query: ', 'splunk')
     vd.splunk.addRow((query, datetime.datetime.utcnow()), index=None)
     return vd.push(SplunkSearchSheet(query))
@@ -130,11 +150,14 @@ def search_splunk():
 
 addGlobals(globals())
 Sheet.addCommand('^N', 'splunk-query', 'search_splunk()')
-SplunkSheet.addCommand(ENTER, 'dive-row', 'vd.push(SplunkSearchSheet(cursorRow[0]))', 'search Splunk with query'),
+SplunkSheet.addCommand(ENTER, 'dive-row', 'vd.push(SplunkSearchSheet(cursorRow[0]))', 'search Splunk with query')
 vd.splunk = SplunkSheet('vsplunk')
 
 
 def main_vsplunk():
+    """
+    vsplunk main
+    """
     args = get_args()
     config = read_config(args.config)
     try:
