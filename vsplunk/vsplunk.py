@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
 TODO
-- SplunkSheet dive row, check for existing sheet and reload
 - Save SplunkSheet as .spl file
 - Open .spl file
+- Update timestamp on dive row
 """
 import re
 import argparse
@@ -43,11 +43,11 @@ class SplunkSearchSheet(Sheet):
     """
     Sheet class for issued queries
     """
-    def __init__(self, query, **kwargs):
+    def __init__(self, name, query, **kwargs):
         """
         Init SplunkSearchSheet
         """
-        name = re.sub('[^a-zA-Z0-9]', '', query)
+
         self.rowtype = 'results'
         self.colnames = {}
         self.columns = []
@@ -139,18 +139,27 @@ def read_config(path):
     return config['SPLUNK']
 
 
-def search_splunk():
+def search_splunk(query=None):
     """
     Query prompt, query history, search sheet
     """
-    query = vd().input('splunk-query: ', 'splunk')
+    if not query:
+        query = vd().input('splunk-query: ', 'splunk')
+
+    name = re.sub('[^a-zA-Z0-9]', '', query)
+
+    sheet = vd.getSheet(name)
+    if sheet:
+        sheet.reload()
+        return vd.push(sheet)
+
     vd.splunk.addRow((query, datetime.datetime.utcnow()), index=None)
-    return vd.push(SplunkSearchSheet(query))
+    return vd.push(SplunkSearchSheet(name, query))
 
 
 addGlobals(globals())
 Sheet.addCommand('^N', 'splunk-query', 'search_splunk()')
-SplunkSheet.addCommand(ENTER, 'dive-row', 'vd.push(SplunkSearchSheet(cursorRow[0]))', 'search Splunk with query')
+SplunkSheet.addCommand(ENTER, 'dive-row', 'search_splunk(cursorRow[0])', 'search Splunk with query')
 vd.splunk = SplunkSheet('vsplunk')
 
 
